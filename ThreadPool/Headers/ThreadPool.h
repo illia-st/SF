@@ -45,6 +45,8 @@ private:
     std::mutex m_conditional_mutex;
     std::condition_variable m_conditional_lock;
 public:
+    ThreadPool();
+
     ThreadPool(const int n_threads);
     ThreadPool(const ThreadPool &) = delete;
     ThreadPool(ThreadPool &&)  = delete;
@@ -53,8 +55,8 @@ public:
     ThreadPool & operator=(ThreadPool &&) = delete;
 
     // Inits thread pool
+    void init(const size_t& threads_number);
     void init();
-
     // Waits until threads finish their current task and shutdowns the pool
     void shutdown();
 

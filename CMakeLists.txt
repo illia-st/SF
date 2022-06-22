@@ -4,3 +4,4 @@ project(SF)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(ThreadPool)
+add_subdirectory(SF)
