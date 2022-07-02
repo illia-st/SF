@@ -3,7 +3,9 @@
 #include <string>
 #include <filesystem>
 #include <algorithm>
-#include "../ThreadPool/BS_thread_pool.hpp"
+#include <fstream>
+#include <BS_thread_pool.hpp>
+
 namespace Operator{
 
     using iterator = std::filesystem::directory_iterator;
@@ -31,7 +33,7 @@ namespace Operator{
         //the function which will do the job
         std::u8string FindPath(const std::u8string& file_name);
 
-        std::u8string tempFindPath(const std::u8string& file_name);
+        std::string FindPath(const std::string& file_name);
     };
 }
 
