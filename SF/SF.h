@@ -3,7 +3,7 @@
 #include <string>
 #include <filesystem>
 #include <algorithm>
-#include "../ThreadPool/Headers/ThreadPool.h"
+#include "../ThreadPool/BS_thread_pool.hpp"
 namespace Operator{
 
     using iterator = std::filesystem::directory_iterator;
@@ -11,20 +11,14 @@ namespace Operator{
     using path = std::filesystem::path;
 
     using const_path = const std::filesystem::path;
-    namespace {
-        std::mutex res_mutex;
-        std::u8string path_function_result{};
-        void ScanDirectory(const_path &path, const std::u8string &file_name);
-        bool OperateDirectory(const_path& path, const std::u8string& file_name);
-    }
 
     class SF{
     private:
-        // root directory
-        path root;
-        // root's subdirectories
-        std::vector<path> root_subdirs;
-        // function which scat the root directory
+        // m_root directory
+        path m_root;
+        // m_root's subdirectories
+        std::vector<path> m_root_subdirs;
+        // function which scat the m_root directory
         std::u8string ScanRootDirectory(const std::u8string &file_name);
     public:
         //the threads number will be default
@@ -36,6 +30,8 @@ namespace Operator{
         SF(SF&& copy) = delete;
         //the function which will do the job
         std::u8string FindPath(const std::u8string& file_name);
+
+        std::u8string tempFindPath(const std::u8string& file_name);
     };
 }
 
