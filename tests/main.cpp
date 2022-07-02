@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "../SF/SF.h"
+#include <SF.h>
 
 
 int main(){

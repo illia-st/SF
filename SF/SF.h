@@ -3,7 +3,9 @@
 #include <string>
 #include <filesystem>
 #include <algorithm>
-#include "../ThreadPool/BS_thread_pool.hpp"
+#include <fstream>
+#include <BS_thread_pool.hpp>
+
 namespace Operator{
 
     using iterator = std::filesystem::directory_iterator;
@@ -19,7 +21,8 @@ namespace Operator{
         // m_root's subdirectories
         std::vector<path> m_root_subdirs;
         // function which scat the m_root directory
-        std::u8string ScanRootDirectory(const std::u8string &file_name);
+        template<class T>
+        T ScanRootDirectory(const T &file_name);
     public:
         //the threads number will be default
         explicit SF(const std::u8string& root_directory);
@@ -31,7 +34,26 @@ namespace Operator{
         //the function which will do the job
         std::u8string FindPath(const std::u8string& file_name);
 
-        std::u8string tempFindPath(const std::u8string& file_name);
+        std::string FindPath(const std::string& file_name);
     };
+    // we needn't use threads here, main thread is enough
+    template<class T>
+    T SF::ScanRootDirectory(const T &file_name){
+        std::ofstream out("out.txt", std::ios_base::app);
+        //Scan the m_root directory to find all the subdirectories
+        for (auto &it: iterator(m_root)) {
+            out << it.path() << std::endl;
+            if (is_directory(it.path())) {
+                m_root_subdirs.push_back(it.path());
+            }
+                //If we find the answer here, we don't have to initialize the threads
+            else if (it.path().filename() == file_name) {
+                out.close();
+                return it.path();
+            }
+        }
+        out.close();
+        return {};
+    }
 }
 

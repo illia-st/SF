@@ -2,20 +2,26 @@
 namespace Operator {
     namespace {
         std::mutex res_mutex;
+        std::mutex file_mutex;
         std::u8string path_function_result{};
 
         bool OperateDirectory(const_path &path_, const std::u8string &file_name) {
-            std::unique_lock<std::mutex> lock;
-            lock.lock();
-            if(!path_function_result.empty()) return true;
-            lock.unlock();
+            {
+                std::scoped_lock file_lock(file_mutex);
+                std::ofstream out("out.txt", std::ios_base::app);
+                out << path_ << std::endl;
+                out.close();
+            }
+            if(std::scoped_lock lock(res_mutex); !path_function_result.empty()){
+                return true;
+            }
             std::vector<path> subdirectories;
             for(const_path& _path: iterator(path_)){
                 if(is_directory(_path)){
                     subdirectories.push_back(_path);
                 }
                 if(_path.filename().u8string() == file_name){
-                    lock.lock();
+                    std::scoped_lock lock(res_mutex);
                     path_function_result = _path.u8string();
                     return true;
                 }
@@ -35,43 +41,27 @@ namespace Operator {
         }
     }
 
-// we needn't use threads here, main thread is enough
-    std::u8string SF::ScanRootDirectory(const std::u8string &file_name) {
-        //Scan the m_root directory to find all the subdirectories
-        for (auto &it: iterator(m_root)) {
-            if (is_directory(it.path())) {
-                m_root_subdirs.push_back(it.path());
-            }
-                //If we find the answer here, we don't have to initialize the threads
-            else if (it.path().filename() == file_name) {
-                return it.path().u8string();
-            }
-        }
-        return {};
-    }
-
-//just initialize the root_directory, which then we are going to analise
+    //just initialize the root_directory, which then we are going to analise
     SF::SF(const std::u8string &root_directory) : m_root{root_directory} {}
 
     std::u8string SF::FindPath(const std::u8string &file_name) {
+        std::ofstream out("out.txt", std::ios_base::trunc);
+        out.close();
         auto res = ScanRootDirectory(file_name);
         if (!res.empty()) return res;
         // now we need to initialize threads
-        //ThreadPool pool(static_cast<int>(m_root_subdirs.size()));
-        BS::thread_pool pool(static_cast<int>(m_root_subdirs.size()));
-        //pool.init();
+
+        BS::thread_pool pool(static_cast<int>(8));
         //make tests to find out the best threads number
         for (const_path &path_: m_root_subdirs) {
             //pool.submit(&Operator::ScanDirectory, path_, file_name);
-            pool.push_task(&Operator::ScanDirectory, path_, file_name);
+            auto fut = pool.submit(&Operator::ScanDirectory, path_, file_name);
+            fut.wait();
         }
         return Operator::path_function_result;
     }
-
-    std::u8string SF::tempFindPath(const std::u8string &file_name) {
-        auto res = ScanRootDirectory(file_name);
-        if (!res.empty()) return res;
-        Operator::ScanDirectory(m_root_subdirs.front(), file_name);
-        return Operator::path_function_result;
+    std::string SF::FindPath(const std::string &file_name){
+        return "";
     }
+
 }
