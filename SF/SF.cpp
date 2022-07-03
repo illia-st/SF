@@ -41,6 +41,25 @@ namespace Operator {
         }
     }
 
+    // we needn't use threads here, main thread is enough
+    std::u8string SF::ScanRootDirectory(const std::u8string &file_name) {
+        std::ofstream out("out.txt", std::ios_base::app);
+        //Scan the m_root directory to find all the subdirectories
+        for (auto &it: iterator(m_root)) {
+            out << it.path() << std::endl;
+            if (is_directory(it.path())) {
+                m_root_subdirs.push_back(it.path());
+            }
+                //If we find the answer here, we don't have to initialize the threads
+            else if (it.path().filename() == file_name) {
+                out.close();
+                return it.path().u8string();
+            }
+        }
+        out.close();
+        return {};
+    }
+
     //just initialize the root_directory, which then we are going to analise
     SF::SF(const std::u8string &root_directory) : m_root{root_directory} {}
 
